@@ -1,0 +1,12 @@
+{
+  "name": "mein-hallo-welt",
+  "version": "1.0.0",
+  "description": "Ein simples Hallo Welt Skript",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "bin": {
+    "hallo": "index.js"
+  }
+}
