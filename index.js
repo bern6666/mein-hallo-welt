@@ -4,7 +4,7 @@ import { createInterface } from 'readline';
 const args = process.argv.slice(2);
 
 // Lies die Version aus der Umgebungsvariable (funktioniert nach npm install -g)
-const version = process.env.npm_package_version || '1.0.0';
+const version = process.env.npm_package_version || '1.0.3';
 
 let name;
 let language = 'de'; // Standard ist Deutsch
