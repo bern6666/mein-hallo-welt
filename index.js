@@ -1,6 +1,8 @@
-// index.js – Hallo-CLI mit Farben, Kurzoptionen und sicherer Argumente-Verarbeitung
+// index.js – mit Konfigurationsdatei
 import { createInterface } from 'readline';
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
 
 // Unterstützte Sprachen
 const validLanguages = ['de', 'en', 'es', 'fr'];
@@ -11,22 +13,24 @@ const greetings = {
   fr: (name) => chalk.magenta(`Bonjour ${name}!`),
 };
 
+// Pfad zur Konfigurationsdatei
+const configPath = path.join(process.env.HOME || process.env.USERPROFILE, '.hallo.json');
+
 // Hilfetext
 const helpText = `
 ${chalk.bold('hallo [Optionen]')}
 
 ${chalk.underline('Optionen:')}
   --name, -n <Name>     Dein Name (optional, wird sonst abgefragt)
-  --language, -l <Sprache>  Sprache: ${validLanguages.join(', ')}
+  --language, -l <Sprache>  Sprache wählen: ${validLanguages.join(', ')}
   --version             Zeigt die Version an
   --help, -h            Zeigt diese Hilfe an
+  --save-config         Speichert die aktuelle Sprache als Standard
 
 ${chalk.underline('Beispiele:')}
   hallo --name Max
-  hallo -n Max -l en
-  hallo --name=Max --language=de
+  hallo -n Max -l en --save-config   # speichert "en" als Standard
   hallo --help
-  hallo --version
 `;
 
 const args = process.argv.slice(2);
@@ -44,15 +48,13 @@ if (args.includes('--version')) {
   process.exit(0);
 }
 
-// Funktion: Wert nach Option extrahieren (mit -l und --language=)
+// Funktion: Wert nach Option extrahieren
 function getValueAfterOption(options, args) {
   for (const option of options) {
-    // 1. --name Max
     const index = args.indexOf(option);
     if (index !== -1 && args[index + 1] && !args[index + 1].startsWith('-')) {
       return args[index + 1];
     }
-    // 2. --name=Max
     const longForm = args.find(arg => arg.startsWith(`${option}=`));
     if (longForm) {
       return longForm.split('=', 2)[1];
@@ -61,8 +63,21 @@ function getValueAfterOption(options, args) {
   return null;
 }
 
+// Lies Konfiguration (falls vorhanden)
+let defaultLanguage = 'de';
+if (fs.existsSync(configPath)) {
+  try {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (validLanguages.includes(config.defaultLanguage)) {
+      defaultLanguage = config.defaultLanguage;
+    }
+  } catch (err) {
+    console.warn(chalk.yellow('⚠️  Konfigurationsdatei ungültig – nutze Standardsprache.'));
+  }
+}
+
 // Sprache verarbeiten
-let language = 'de';
+let language = defaultLanguage; // Starte mit der gespeicherten Sprache
 const langArg = getValueAfterOption(['--language', '-l'], args);
 if (langArg) {
   const lang = langArg.toLowerCase();
@@ -70,7 +85,7 @@ if (langArg) {
     language = lang;
   } else {
     console.warn(chalk.yellow(`⚠️  Sprache '${lang}' nicht unterstützt. Nutze: ${validLanguages.join(', ')}`));
-    console.log(chalk.gray(`➡️  Fallback: Deutsch\n`));
+    console.log(chalk.gray(`➡️  Fallback: ${defaultLanguage}\n`));
   }
 }
 
@@ -90,6 +105,16 @@ if (!name) {
       resolve(answer.trim());
     });
   });
+}
+
+// Option: Konfiguration speichern
+if (args.includes('--save-config')) {
+  try {
+    fs.writeFileSync(configPath, JSON.stringify({ defaultLanguage: language }, null, 2));
+    console.log(chalk.green(`✅ Sprache '${language}' wurde als Standard gespeichert.`));
+  } catch (err) {
+    console.warn(chalk.red(`❌ Konnte Konfiguration nicht speichern: ${err.message}`));
+  }
 }
 
 // Ausgabe
