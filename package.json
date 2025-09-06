@@ -1,0 +1,20 @@
+{
+  "name": "hallo_bern6666",
+  "version": "1.0.5",
+  "description": "Ein einfaches CLI-Tool zur Begrüßung in mehreren Sprachen.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "hallo": "index.js"
+  },
+  "keywords": [
+    "greet",
+    "hello",
+    "cli"
+  ],
+  "author": "Bernhard Six",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.6.0"
+  }
+}
